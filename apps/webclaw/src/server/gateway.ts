@@ -20,7 +20,9 @@ import type { KeyObject } from 'node:crypto'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
-const DEVICE_KEYS_PATH = pathResolve(__dirname, '../../.device-keys.json')
+const DEVICE_KEYS_PATH =
+  process.env.WEBCLAW_DEVICE_KEYS_PATH?.trim() ||
+  pathResolve(__dirname, '../../.device-keys.json')
 const ED25519_SPKI_PREFIX = Buffer.from('302a300506032b6570032100', 'hex')
 
 type StoredDeviceKeys = {
