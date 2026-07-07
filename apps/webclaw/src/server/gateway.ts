@@ -146,6 +146,18 @@ function signPayload(privateKey: KeyObject, payload: string): string {
   return base64UrlEncode(signature)
 }
 
+function messageDataToString(data: unknown): string {
+  if (typeof data === 'string') return data
+  if (Buffer.isBuffer(data)) return data.toString('utf8')
+  if (data instanceof ArrayBuffer) return Buffer.from(data).toString('utf8')
+  if (ArrayBuffer.isView(data)) {
+    return Buffer.from(data.buffer, data.byteOffset, data.byteLength).toString(
+      'utf8',
+    )
+  }
+  return ''
+}
+
 let _deviceIdentityPromise: Promise<DeviceIdentity> | null = null
 function getDeviceIdentity(): Promise<DeviceIdentity> {
   if (!_deviceIdentityPromise) {
@@ -283,8 +295,8 @@ async function buildConnectParams(
   const scopes = ['operator.admin']
 
   const params: ConnectParams = {
-    minProtocol: 3,
-    maxProtocol: 3,
+    minProtocol: 4,
+    maxProtocol: 4,
     client: {
       id: clientId,
       displayName: 'webclaw',
@@ -350,7 +362,7 @@ function waitForConnectChallenge(ws: WebSocket, timeoutMs = 5000): Promise<strin
 
     function handler(evt: MessageEvent) {
       try {
-        const data = typeof evt.data === 'string' ? evt.data : ''
+        const data = messageDataToString(evt.data)
         const parsed = JSON.parse(data) as GatewayFrame
         if (parsed.type === 'event' && (parsed as any).event === 'connect.challenge') {
           const payload = (parsed as any).payload as { nonce?: string } | undefined
@@ -418,7 +430,7 @@ function createGatewayClient(): GatewayClient {
 
   function handleMessage(evt: MessageEvent) {
     try {
-      const data = typeof evt.data === 'string' ? evt.data : ''
+      const data = messageDataToString(evt.data)
       const parsed = JSON.parse(data) as GatewayFrame
       if (parsed.type === 'event') {
         if (onEvent) onEvent(parsed)
@@ -598,7 +610,7 @@ export function gatewayEventStream({
 
   function handleMessage(evt: MessageEvent) {
     try {
-      const data = typeof evt.data === 'string' ? evt.data : ''
+      const data = messageDataToString(evt.data)
       const parsed = JSON.parse(data) as GatewayFrame
       if (parsed.type !== 'event') return
       onEvent(parsed)
@@ -700,7 +712,7 @@ function createGatewayWaiter(): GatewayWaiter {
 
   function handleMessage(evt: MessageEvent) {
     try {
-      const data = typeof evt.data === 'string' ? evt.data : ''
+      const data = messageDataToString(evt.data)
       const parsed = JSON.parse(data) as GatewayFrame
       if (parsed.type !== 'res') return
       const w = waiters.get(parsed.id)
