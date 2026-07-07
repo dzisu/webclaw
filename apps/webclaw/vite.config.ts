@@ -8,7 +8,20 @@ import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'vite'
 import viteTsConfigPaths from 'vite-tsconfig-paths'
 
+const allowedHosts = [
+  'webclaw.zisu.uk',
+  ...(process.env.WEBCLAW_ALLOWED_HOSTS?.split(',') ?? []),
+]
+  .map((host) => host.trim())
+  .filter(Boolean)
+
 const config = defineConfig({
+  server: {
+    allowedHosts,
+  },
+  preview: {
+    allowedHosts,
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
